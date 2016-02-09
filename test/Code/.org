@@ -1,0 +1,10 @@
+[DIRECTORY]
+name: Code
+desc: Software source code for reference purposes. Organized by repository
+        name. When possible, code should have repository information included
+        so that it can be updated (e.g. git repos).
+rules: TLD - Place all content in sub-directories.
+
+[CONTENTS]
+restrict-dirs: False
+restrict-files: True

@@ -1,0 +1,8 @@
+[DIRECTORY]
+name: Important
+desc: Especially important documents. Items placed here should be encrypted.
+rules: TLD - Place all content in sub-directories.
+
+[CONTENTS]
+restrict-dirs: False
+restrict-files: True

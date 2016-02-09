@@ -1,0 +1,8 @@
+[DIRECTORY]
+name: test
+desc: Top Level Archive Directory
+rules: Very seldom should something be added here.
+
+[CONTENTS]
+restrict-dirs: True
+restrict-files: True

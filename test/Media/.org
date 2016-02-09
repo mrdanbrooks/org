@@ -1,0 +1,10 @@
+[DIRECTORY]
+name: Media
+desc: Non-Important, Non-work specific, and entertainment. No files must be
+        placed in a subdirectory.
+rules: TLD - Place all content in sub-directories.
+
+
+[CONTENTS]
+restrict-dirs: True
+restrict-files: True

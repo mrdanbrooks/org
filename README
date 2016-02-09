@@ -1,0 +1,103 @@
+org
+
+$ org
+-------------------
+DESCRIPTION
+    This directory should contain some files etc...
+
+RULES
+    No directories.
+
+/Movies
+    This is where the movies should go.
+
+/Music
+    This is where the music should go.
+
+/Books
+    This is where the books should go.
+--------------------
+DESCRIPTION
+    This directory should contain some files etc...
+
+RULES
+    No directories.
+
+VIOLATIONS
+    /Stuff - not listed in acceptabed directories in .org file
+    things.txt - no text files allowed.
+
+/Movies
+    This is where the movies should go.
+
+/Music
+    This is where the music should go.
+
+/Books
+    This is where the books should go.
+--------------------
+
+$ org tree
+
+* Movies
+  * Action
+  * Animated
+* Music
+* Pictures
+  * Photos
+    * 2005
+    * 2006
+  * Backgrounds
+* Books
+  * Audiobooks
+  * pdfs
+
+--------------------
+
+$ org --depth 2
+
+DESCRIPTION
+    This directory should contain some files etc...
+
+RULES
+    No directories.
+
+/Movies
+    This is where the movies should go.
+
+/Movies/Action
+    This is where action movies go
+
+/Movies/Animated
+    This is where animated movies go 
+
+/Music
+    This is where the music should go.
+
+/Books
+    This is where the books should go.
+
+
+------------------------------
+
+$ org tree --depth 2
+
+* Movies
+  * Action
+  * Animated
+* Music
+* Pictures
+  * Photos
+    * 2005
+    * 2006
+  * Backgrounds
+* Books
+  * Audiobooks
+  * pdfs
+
+--------------------
+
+
+TODO
+====
+- execute a script to determine if rules are broken in addition to directories / files checking

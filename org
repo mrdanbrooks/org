@@ -1,0 +1,176 @@
+#!/usr/bin/env python
+# org - show what is in this directory
+# org --desc
+#     Display description of what is in this directory
+# org --tree 
+# org --tree -- show the org tree
+# org initdir 
+#     Creates a .org file in the current directory (if one doesn't exist)
+#
+import argparse
+import ConfigParser
+import os
+
+
+# TODO: This only recurses down. 
+# Is it helpful to also be able to recurse up?
+
+class DirectoryOrg(object):
+    def __init__(self, abs_path):
+        if not os.path.exists(abs_path):
+            raise Exception("Not a real path")
+        self.path = abs_path
+        self.name = ""
+        self.desc = ""
+        self.rules = ""
+        self.restrict_dirs = False
+        self.restrict_files = False
+        self.allowed_dirs = list()   # dir names (str)
+        self.allowed_files = list()  # file names (str)
+        # Child dirs and files - http://stackoverflow.com/a/973488
+        self.subdirs = next(os.walk(self.path))[1] # child directories (str)
+        self.files = next(os.walk(self.path))[2]   # child files (str)
+
+    def __str__(self):
+        return "Path: "+ self.path + \
+                "\nName: "+ self.name + \
+                "\nDesc: " + self.desc + \
+                "\nRules: " + self.rules + \
+                "\nDirs: " + str(self.subdirs) + \
+                "\nFiles: " + str(self.files)
+    
+    def is_defined(self):
+        return True if ".org" in self.files else False
+
+    def gen_subdir_org(self, name):
+        if not name in self.subdirs:
+            raise Exception("That is not a valid subdirectory!")
+        sub = DirectoryOrg(os.path.join(self.path, name))
+        if sub.is_defined():
+            sub.read_org_file()
+        return sub
+
+    def read_org_file(self):
+        if not ".org" in self.files:
+            raise Exception("No .org file present")
+        parser = ConfigParser.ConfigParser()
+        parser.read(os.path.join(self.path, '.org'))
+        if not parser.has_section("DIRECTORY"):
+            raise Exception("org file has missing directory section")
+        if not parser.has_section("CONTENTS"):
+            raise Exception("org file has missing contents section")
+        
+        self.name = parser.get("DIRECTORY", "name")
+        if not self.name == os.path.basename(self.path):
+            raise Exception("Directory '%s' .org file incorrectly named '%s'" % (os.path.basename(self.path), self.name))
+
+        self.desc = parser.get("DIRECTORY", "desc")
+        self.rules = parser.get("DIRECTORY", "rules")
+        if parser.has_option("CONTENTS", "restrict-dirs"):
+            self.restrict_dirs = parser.getboolean("CONTENTS", "restrict-dirs")
+        else:
+            self.restrict_dirs = False
+
+        if parser.has_option("CONTENTS", "restrict-files"):
+            self.restrict_files = parser.getboolean("CONTENTS", "restrict-files")
+        else:
+            self.restrict_files = False
+
+        if parser.has_option("CONTENTS", "directories"):
+            self.allowed_dirs = parser.get("CONTENTS", "directories").split(',')
+        else:
+            self.allowed_dirs = list()
+
+        if parser.has_option("CONTENTS", "files"):
+            self.allowed_files = parser.get("CONTENTS", "files").split(',')
+        else:
+            self.allowed_files = list()
+
+    def create_org_file(self):
+        if ".org" in self.files:
+            raise Exception("org file already present")
+        parser = ConfigParser.ConfigParser()
+        parser.add_section("DIRECTORY")
+        parser.add_section("CONTENTS")
+        parser.set("DIRECTORY","name", os.path.basename(self.path))
+        parser.set("DIRECTORY","desc", "")
+        parser.set("DIRECTORY","rules", "")
+        parser.set("CONTENTS","restrict-dirs","False")
+        parser.set("CONTENTS","restrict-files","False")
+        parser.set("CONTENTS","directories","")
+        parser.set("CONTENTS","files","")
+        with open(".org", "w") as f:
+            parser.write(f)
+        filedata = None
+        with open(".org", "r") as f:
+            filedata = f.read()
+        filedata = filedata.replace(" =",":")
+        with open(".org", "w") as f:
+            f.write(filedata)
+        os.system('%s %s' % (os.getenv('EDITOR'), ".org"))
+       
+class OrgTree(object):
+    def __init__(self, d, limit=999):
+        self.top_dir = d
+        self.limit = limit
+
+    def __print_star_tree(self, level, org):
+        """ Printing function - draws a tree structure of the directories """
+        if level < 0:
+            raise Exception("Invalid level")
+        tmpstr = "  "*(level-1) if level > 1 else ""
+        tmpstr += "* " if level > 0 else ""
+        tmpstr += org.name
+        print tmpstr
+
+    def __print_description(self, level, org):
+        tmpstr = "/" + "/".join(org.path.split("/")[-(level+1):]) + "\n"
+        tmpstr += " "*4 + "DESCRIPTION\n"
+        desc = org.desc.split("\n")
+        for line in desc:
+            tmpstr += " "*8 + line + "\n"
+        tmpstr += " "*4 + "RULES\n"
+        rules = org.rules.split("\n")
+        for line in rules:
+            tmpstr += " "*8 + line + "\n"
+        tmpstr += "\n"
+        print tmpstr
+
+    def _recurse_tree(self, level, printfun, org):
+        """ Recursively walk the tree, calling a function at each node """
+        if not org.is_defined():
+            return
+        if level > self.limit:
+            return
+        printfun(level, org)
+        for d in org.subdirs:
+            tmp = org.gen_subdir_org(d)
+            self._recurse_tree(level+1, printfun, tmp)
+
+    def printASCII(self):
+        self._recurse_tree(0, self.__print_star_tree, self.top_dir)
+
+    def printDesc(self):
+        self._recurse_tree(0, self.__print_description, self.top_dir)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--info", action="store_true")
+    parser.add_argument("--tree", action="store_true")
+    parser.add_argument("--initdir", action="store_true")
+    args = parser.parse_args()
+
+    dirorg = DirectoryOrg(os.getcwd())
+    if dirorg.is_defined():
+        dirorg.read_org_file()
+    if args.info:
+        print dirorg
+
+    if args.tree:
+        tree = OrgTree(dirorg)
+        tree.printASCII()
+        tree.printDesc()
+
+    if args.initdir:
+        dirorg.create_org_file()

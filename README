@@ -1,4 +1,32 @@
+
 org
+    Display current directory information, along with sub directories
+
+org doc
+    Same as 'org', but creates a README.org file in the directory 
+
+org initdir 
+    Creates an .org file in the current directory
+
+org check
+    Checks the current directory meets rules
+
+org --tree
+    Displays the organization tree with current directory as root
+
+org --depth 2
+    Display current directory information, along with sub directories
+    recursively to a limit depth of 2.
+
+org --tree --depth 2
+    Displays the organization tree with current directory as root.
+    Limits the recursion depth to 2
+
+org check --depth 2
+    Checks the current directory meets rules, and recuses a depth of 2
+
+
+
 
 $ org
 -------------------

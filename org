@@ -165,12 +165,18 @@ if __name__ == "__main__":
     if dirorg.is_defined():
         dirorg.read_org_file()
     if args.info:
-        print dirorg
+        if dirorg.is_defined():
+            print dirorg
+        else:
+            print "Not an organized directory"
 
     if args.tree:
-        tree = OrgTree(dirorg)
-        tree.printASCII()
-        tree.printDesc()
+        if dirorg.is_defined():
+            tree = OrgTree(dirorg)
+            tree.printASCII()
+            tree.printDesc()
+        else:
+            print "Not an organized directory"
 
     if args.initdir:
         dirorg.create_org_file()

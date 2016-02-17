@@ -11,6 +11,9 @@ import argparse
 import ConfigParser
 import os
 
+# This exception is a normal error by the user. We catch it and print the message
+# to the user as an error.
+class UserError(Exception): pass
 
 # TODO: This only recurses down. 
 # Is it helpful to also be able to recurse up?
@@ -42,6 +45,10 @@ class DirectoryOrg(object):
     def is_defined(self):
         return True if ".org" in self.files else False
 
+    def assert_defined(self):
+        if not self.is_defined():
+            raise UserError("Not an organized directory. Use 'org --initdir' to organize it.")
+
     def gen_subdir_org(self, name):
         if not name in self.subdirs:
             raise Exception("That is not a valid subdirectory!")
@@ -62,7 +69,7 @@ class DirectoryOrg(object):
         
         self.name = parser.get("DIRECTORY", "name")
         if not self.name == os.path.basename(self.path):
-            raise Exception("Directory '%s' .org file incorrectly named '%s'" % (os.path.basename(self.path), self.name))
+            raise UserError("Directory '%s' .org file incorrectly named '%s'" % (os.path.basename(self.path), self.name))
 
         self.desc = parser.get("DIRECTORY", "desc")
         self.rules = parser.get("DIRECTORY", "rules")
@@ -88,7 +95,7 @@ class DirectoryOrg(object):
 
     def create_org_file(self):
         if ".org" in self.files:
-            raise Exception("org file already present")
+            raise UserError("org file already present")
         parser = ConfigParser.ConfigParser()
         parser.add_section("DIRECTORY")
         parser.add_section("CONTENTS")
@@ -111,6 +118,9 @@ class DirectoryOrg(object):
        
 class OrgTree(object):
     def __init__(self, d, limit=999):
+        if not isinstance(d, DirectoryOrg):
+            raise Exception("Type should be DirectoryOrg")
+        d.assert_organized()
         self.top_dir = d
         self.limit = limit
 
@@ -162,21 +172,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dirorg = DirectoryOrg(os.getcwd())
-    if dirorg.is_defined():
-        dirorg.read_org_file()
-    if args.info:
+    try:
         if dirorg.is_defined():
+            dirorg.read_org_file()
+        if args.info:
+            dirorg.assert_defined()
             print dirorg
-        else:
-            print "Not an organized directory"
 
-    if args.tree:
-        if dirorg.is_defined():
+        if args.tree:
+            dirorg.assert_defined()
             tree = OrgTree(dirorg)
             tree.printASCII()
             tree.printDesc()
-        else:
-            print "Not an organized directory"
 
-    if args.initdir:
-        dirorg.create_org_file()
+        if args.initdir:
+            dirorg.create_org_file()
+    except UserError as e:
+        print "org:", e

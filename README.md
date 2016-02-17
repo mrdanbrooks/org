@@ -1,3 +1,7 @@
+To install in development mode using pip:
+
+    $ cd org
+    $ sudo pip install -e .
 
 org
     Display current directory information, along with sub directories
